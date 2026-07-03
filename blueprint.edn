@@ -1,0 +1,10 @@
+{:itonami.blueprint/id "cloud-itonami-cofog-07.4"
+ :itonami.blueprint/name "Independent Community Vector-Control & Environmental Health Monitoring"
+ :itonami.blueprint/cofog "07.4"
+ :itonami.blueprint/domain :health/public-health-services
+ :itonami.blueprint/license "AGPL-3.0-or-later"
+ :itonami.blueprint/social-impact [:disease-prevention :public-health-equity :early-warning]
+ :itonami.blueprint/governor :public-health-governor
+ :itonami.blueprint/robotics true
+ :itonami.blueprint/required-technologies [:robotics :telemetry :identity :dmn :bpmn :audit-ledger]
+ :itonami.blueprint/status :public-oss}
