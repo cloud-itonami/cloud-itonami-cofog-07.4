@@ -11,6 +11,18 @@ renting a closed field-service SaaS. Complements
 [`cloud-itonami-8691`](https://github.com/cloud-itonami/cloud-itonami-8691)
 (Health Access Navigation) at the environmental-surveillance layer.
 
+**Status: design blueprint, no code implemented yet.** This repository
+has zero files under `src/` and no `test/` directory — the
+Surveillance Advisor and Public Health Governor described below do not
+exist in code. It is not (yet) a governed Advisor⊣Governor actuation
+actor; the Core Contract section specifies what that pipeline is
+intended to enforce once built, not current behavior. See
+[`cloud-itonami-isco-1324`](https://github.com/cloud-itonami/cloud-itonami-isco-1324)
+for this fleet's minimal implemented reference (`actor`/`advisor`/
+`governor`/`store`), and the `cloud-itonami-assoc-*` /
+`cloud-itonami-municipality-*` / `cloud-itonami-lei-*` repos for this
+fleet's honest not-an-actuation-actor disclaimer pattern.
+
 ## Robotics premise
 
 All cloud-itonami verticals are designed on the premise that a **robot
@@ -22,7 +34,7 @@ that gates it. The governor never dispatches hardware itself;
 `:high`/`:safety-critical` findings (e.g. a disease-outbreak-risk signal)
 require human sign-off and routing to the public-health authority.
 
-## Core Contract
+## Core Contract (design intent — not yet implemented)
 
 ```text
 site/zone survey request + prior surveillance history
@@ -34,9 +46,12 @@ Surveillance Advisor -> Public Health Governor -> report, or human escalation
 robot sensing actions (gated) + surveillance record + audit ledger
 ```
 
-No automated finding can dispatch a robot action the governor refuses,
-suppress a surveillance record, or downgrade an outbreak-risk signal
-without governor approval and audit evidence.
+**No code exists yet in this repo** — no `src/`, no `test/`, only this
+design document plus `blueprint.edn` and `docs/`. Once built, no
+automated finding will be able to dispatch a robot action the governor
+refuses, suppress a surveillance record, or downgrade an outbreak-risk
+signal without governor approval and audit evidence — but none of
+that is enforced today.
 
 ## Capability layer
 
