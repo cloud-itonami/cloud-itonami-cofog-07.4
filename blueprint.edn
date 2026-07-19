@@ -7,4 +7,32 @@
  :itonami.blueprint/governor :public-health-governor
  :itonami.blueprint/robotics true
  :itonami.blueprint/required-technologies [:robotics :telemetry :identity :dmn :bpmn :audit-ledger]
- :itonami.blueprint/status :public-oss}
+ :itonami.blueprint/status :public-oss
+ :itonami.blueprint/maturity :implemented
+ :itonami.blueprint/implemented-slice
+ "Surveillance Advisor ⊣ Public Health Governor, langgraph-clj
+ StateGraph, append-only audit ledger. A community vector-control /
+ environmental-health SURVEY COORDINATION actor -- not direct
+ treatment-dispenser control authority and, MOST IMPORTANTLY, NEVER a
+ medical or diagnostic authority. Four ops
+ (`:log-environmental-reading` / `:vector-survey-log` /
+ `:schedule-service-visit` / `:escalate-outbreak-signal`), all
+ `:effect :propose` only. Eleven concrete governor checks elaborate
+ this blueprint's HARD invariants, headlined by a PERMANENT,
+ UNCONDITIONAL, cross-op diagnosis/health-determination authority
+ block (`diagnosis-authority-blocked-violations` -- rejects outright,
+ never merely escalates, any proposal declaring `:diagnosis?` or
+ `:health-determination`, at any op or confidence): propose-only
+ effect, closed op allowlist, closed proposal-effect allowlist (no
+ direct treatment-dispenser control), permanent treatment-actuate
+ block, sensor-grounded ELEVATED-RISK/NORMAL verdicts
+ (vectorsurvey.telemetry/grounds-verdict?, requiring cited readings to
+ cover both trap-count and standing-water-presence metrics -- never
+ advisor self-attestation), independent site verification/registration
+ AND independent trap-unit verification/registration before
+ service-visit scheduling, double-schedule guard, vector-species
+ validation, and vector-count plausibility validation. Outbreak-signal
+ escalation ALWAYS escalates to a human public-health official;
+ `:log-environmental-reading` is the only op eligible to auto-commit,
+ and only at phase 3 when governor-clean. 76 tests / 209 assertions
+ green, clj-kondo 0 errors."}
