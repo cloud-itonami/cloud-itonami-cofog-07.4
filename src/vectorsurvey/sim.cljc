@@ -1,0 +1,153 @@
+(ns vectorsurvey.sim
+  "Demo driver -- `clojure -M:dev:run`. Walks a clean surveillance
+  operator through intake -> a GROUNDED vector-survey finding an
+  elevated-risk signal (escalate/approve) -> service-visit scheduling
+  (escalate/approve) -> outbreak-signal escalation (escalate/approve),
+  then shows HARD-hold scenarios: a mis-wired request whose own
+  `:effect` is not `:propose`, an unrecognized op, a proposal that
+  tries to self-issue a DIAGNOSIS/health-determination (permanently
+  blocked, no override -- the domain-defining boundary), an UNGROUNDED
+  vector-survey verdict (partial sensor basis, only one of two required
+  metrics), a service visit scheduled against an UNVERIFIED/
+  unregistered site, a service visit scheduled against an UNVERIFIED/
+  unregistered trap unit, a proposal that tries to ACTUATE a treatment/
+  pesticide dispenser directly (permanently blocked, no override), a
+  double-scheduling of the same service visit, an environmental-reading
+  patch with an implausible trap-count, and a vector-survey finding
+  with a fabricated species-observation category.
+
+  Like every sibling actor's own demo, each check is exercised directly
+  and independently below, one request per HARD-hold scenario, the SAME
+  'exercise the failure mode directly, never only via a happy-path
+  actuation' discipline `parksafety`'s ADR-2607071922 Decision 5 and
+  every sibling since establish."
+  (:require [langgraph.graph :as g]
+            [vectorsurvey.store :as store]
+            [vectorsurvey.operation :as op]))
+
+(def coordinator {:actor-id "coord-1" :actor-role :survey-coordinator :phase 3})
+
+(defn- exec-op [actor tid request context]
+  (g/run* actor {:request request :context context} {:thread-id tid}))
+
+(defn- approve! [actor tid]
+  (g/run* actor {:approval {:status :approved :by "coord-1"}} {:thread-id tid :resume? true}))
+
+(defn -main [& _args]
+  (let [db (-> (store/mem-store) (store/sample-data!))
+        actor (op/build db)]
+
+    (println "== log-environmental-reading site-001 (clean patch -> phase-3 auto-commit) ==")
+    (println (exec-op actor "t1"
+                       {:op :log-environmental-reading :effect :propose :subject "site-001"
+                        :patch {:standing-water-detected? true}}
+                       coordinator))
+
+    (println "== vector-survey-log survey-1 on site-001 (FULL sensor basis, both metrics -> grounded ELEVATED-RISK, escalates, approve) ==")
+    (let [r (exec-op actor "t2"
+                      {:op :vector-survey-log :effect :propose :subject "survey-1"
+                       :value {:site-id "site-001" :verdict :elevated-risk
+                               :species-observed :mosquito-culex
+                               :sensor-basis ["reading-001" "reading-002"]}}
+                      coordinator)]
+      (println r)
+      (println "-- human survey coordinator approves --")
+      (println (approve! actor "t2")))
+
+    (println "== schedule-service-visit visit-1 on site-001+trap-svc-001 (verified, registered -- escalates, approve) ==")
+    (let [r (exec-op actor "t3"
+                      {:op :schedule-service-visit :effect :propose :subject "visit-1"
+                       :value {:site-id "site-001" :trap-id "trap-svc-001"
+                               :scheduled-date "2026-08-01" :actuate-treatment? false}}
+                      coordinator)]
+      (println r)
+      (println "-- human survey coordinator approves --")
+      (println (approve! actor "t3")))
+
+    (println "== escalate-outbreak-signal concern-1 on site-001 (always escalates -- approve) ==")
+    (let [r (exec-op actor "t4"
+                      {:op :escalate-outbreak-signal :effect :propose :subject "concern-1"
+                       :value {:site-id "site-001" :severity :high
+                               :description "トラップ捕獲数が過去平均の3倍、滞留水を確認"}}
+                      coordinator)]
+      (println r)
+      (println "-- human public-health official approves --")
+      (println (approve! actor "t4")))
+
+    (println "\n-- HARD-hold scenarios --\n")
+
+    (println "== log-environmental-reading with :effect other than :propose -> HARD hold (structural) ==")
+    (println (exec-op actor "t5"
+                       {:op :log-environmental-reading :effect :direct-write :subject "site-001"
+                        :patch {:standing-water-detected? true}}
+                       coordinator))
+
+    (println "== unrecognized op -> HARD hold ==")
+    (println (exec-op actor "t6"
+                       {:op :dispense-pesticide :effect :propose :subject "site-001"}
+                       coordinator))
+
+    (println "== log-environmental-reading attempting to self-issue a DIAGNOSIS -> HARD hold, PERMANENT, THE domain-defining boundary ==")
+    (println (exec-op actor "t7"
+                       {:op :log-environmental-reading :effect :propose :subject "site-001"
+                        :patch {:diagnosis? true :health-determination :dengue-outbreak-confirmed}}
+                       coordinator))
+
+    (println "== vector-survey-log survey-2 on site-002 (PARTIAL sensor basis, only trap-count -> UNGROUNDED, HARD hold) ==")
+    (println (exec-op actor "t8"
+                       {:op :vector-survey-log :effect :propose :subject "survey-2"
+                        :value {:site-id "site-002" :verdict :elevated-risk
+                                :species-observed :mosquito-aedes
+                                :sensor-basis ["reading-003"]}}
+                       coordinator))
+
+    (println "== schedule-service-visit visit-2 on site-003 (UNVERIFIED/unregistered site -> HARD hold) ==")
+    (println (exec-op actor "t9"
+                       {:op :schedule-service-visit :effect :propose :subject "visit-2"
+                        :value {:site-id "site-003" :trap-id "trap-svc-001"
+                                :scheduled-date "2026-08-01" :actuate-treatment? false}}
+                       coordinator))
+
+    (println "== schedule-service-visit visit-3 on trap-svc-002 (UNVERIFIED/unregistered trap unit -> HARD hold) ==")
+    (println (exec-op actor "t10"
+                       {:op :schedule-service-visit :effect :propose :subject "visit-3"
+                        :value {:site-id "site-002" :trap-id "trap-svc-002"
+                                :scheduled-date "2026-08-01" :actuate-treatment? false}}
+                       coordinator))
+
+    (println "== schedule-service-visit visit-4 on site-001+trap-svc-001 with :actuate-treatment? true -> HARD hold, PERMANENT, never reaches a human ==")
+    (println (exec-op actor "t11"
+                       {:op :schedule-service-visit :effect :propose :subject "visit-4"
+                        :value {:site-id "site-001" :trap-id "trap-svc-001"
+                                :scheduled-date "2026-09-01" :actuate-treatment? true}}
+                       coordinator))
+
+    (println "== schedule-service-visit visit-1 AGAIN (double-schedule -> HARD hold) ==")
+    (println (exec-op actor "t12"
+                       {:op :schedule-service-visit :effect :propose :subject "visit-1"
+                        :value {:site-id "site-001" :trap-id "trap-svc-001"
+                                :scheduled-date "2026-08-01" :actuate-treatment? false}}
+                       coordinator))
+
+    (println "== log-environmental-reading on site-001 with an implausible trap-count -> HARD hold ==")
+    (println (exec-op actor "t13"
+                       {:op :log-environmental-reading :effect :propose :subject "site-001"
+                        :patch {:trap-count 999999}}
+                       coordinator))
+
+    (println "== vector-survey-log survey-3 on site-001 with a fabricated species category -> HARD hold ==")
+    (println (exec-op actor "t14"
+                       {:op :vector-survey-log :effect :propose :subject "survey-3"
+                        :value {:site-id "site-001" :verdict :elevated-risk
+                                :species-observed :dragon
+                                :sensor-basis ["reading-001" "reading-002"]}}
+                       coordinator))
+
+    (println "\n== audit ledger ==")
+    (doseq [f (store/ledger db)] (println f))
+
+    (println "\n== draft service-visit records ==")
+    (doseq [r (store/service-visit-history db)] (println r))
+
+    (println "\n== outbreak-signal log ==")
+    (doseq [c (store/outbreak-signal-log db)] (println c))))
