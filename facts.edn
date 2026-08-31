@@ -1,0 +1,253 @@
+;; Regulatory source register for cloud-itonami-cofog-07.4 — COFOG 07.4,
+;; public health services, as this blueprint implements it: an independent
+;; community vector-control and environmental-health SURVEY actor.
+;;
+;; Until this file existed, the repository's public-health claims — which
+;; statute a mosquito-borne-disease survey actually operates under in Japan,
+;; which authority grades hospital services, where the national notifiable
+;; surveillance data is published — could not be traced to anything. This is
+;; that list.
+;;
+;; Shape is tx-data (a vector of entity maps), like every other EDN corpus in
+;; this workspace, so it loads with
+;;   (d/transact conn (edn/read-string (slurp "facts.edn")))
+;; :source/id is the join key. A statute or page not in this table has NO
+;; basis for a claim in this repository — extend the table, never invent an
+;; id or a URL.
+;;
+;; VERIFIED BY `nbb scripts/verify-facts.cljs`, which re-fetches every entry.
+;; Each carries a :source/verify tag naming WHICH check establishes it:
+;;   :e-gov-law-id   resolved through the e-Gov law API (total_count, title,
+;;                   law number). The /law/<id> page's HTTP status is NEVER
+;;                   consulted — it answers 200 for any id at all.
+;;   :page-identity  2xx, final URL still the page asked for, declared
+;;                   charset, and the <title> recorded below.
+;;   :page-text      All of :page-identity, plus every string in
+;;                   :page/must-contain present in the de-tagged body.
+;;
+;; CLAIMS STOP AT THE LEVEL ACTUALLY CHECKED: document identity, and for the
+;; :page-text entries the strings read on 2026-09-01. No article text, no
+;; article numbers, no conformance claim is asserted, because none of that
+;; was read. What the register does NOT cover is said in
+;; :coverage/not-covered, not left silent.
+;;
+;; THE HOST ASSUMPTIONS ARE MEASURED AT RUN TIME, NOT DATED IN A COMMENT.
+;; The :host-behaviour entities below say what each host does with a path
+;; that does not exist; the verifier fetches one on every run and fails if
+;; the answer has changed.
+;;
+;; MEASURED 2026-09-01: BOTH hosts answer **404** for a path that does not
+;; exist, and neither served a bot challenge to a paced, serial client.
+;; www.mhlw.go.jp refuses with a real 42,503-byte 「お探しのページが見つかり
+;; ません。｜厚生労働省」 page at the requested URL — status AND title both
+;; separate it from a real page. id-info.jihs.go.jp refuses with a bare
+;; 315-byte Apache "404 Not Found" — no site chrome at all. One more host
+;; behaviour is load-bearing and is therefore also written down:
+;; id-info.jihs.go.jp does NOT redirect http:// to https:// (the http form of
+;; a real page answers 404 at port 80), while www.mhlw.go.jp does. The
+;; verifier's redirect self-test must aim at the mhlw page, and says so.
+;;
+;; THE FORMER MINISTRY NAME: 国立感染症研究所 (NIID) was folded into 国立健康
+;;危機管理研究機構 (JIHS) in 2025; the surveillance site now lives on
+;; id-info.jihs.go.jp. www.niid.go.jp/niid/ja/idwr.html still answers 200 but
+;; REDIRECTS there — the register cites the URL the authority actually
+;; serves, not the one that forwards to it.
+
+[
+ ;; ── What each host does with a path that does not exist ────────────────────
+ ;; Re-measured on every run. A change here invalidates the checks that rest
+ ;; on it, which is the point of writing it down as data.
+
+ {:source/id "host.www-mhlw-go-jp"
+  :source/kind :host-behaviour
+  :host/name "www.mhlw.go.jp"
+  :host/missing-path :refuses
+  :host/missing-status 404
+  :source/note "厚生労働省. Answers 404 with a real 42,503-byte
+                「お探しのページが見つかりません。｜厚生労働省」 page at the
+                requested URL, so status and title both separate a real page
+                from an invented one. No bot challenge was served to a paced,
+                serial client across every fetch this register was built
+                with. http:// redirects to https:// (measured), so this is
+                the host the verifier's redirect self-test aims at."}
+
+ {:source/id "host.id-info-jihs-go-jp"
+  :source/kind :host-behaviour
+  :host/name "id-info.jihs.go.jp"
+  :host/missing-path :refuses
+  :host/missing-status 404
+  :source/note "国立健康危機管理研究機構 感染症情報提供サイト (the former
+                国立感染症研究所 surveillance host). Answers 404 with a
+                315-byte bare Apache '404 Not Found' body at the requested
+                URL — no site chrome, so byte count is what discriminates.
+                Does NOT redirect http:// to https://: the http form of a
+                cited page answers 404 at port 80. Measured 2026-09-01."}
+
+ ;; ── Statutes, resolved through the e-Gov law API ───────────────────────────
+
+ {:source/id "law.infectious-diseases"
+  :source/kind :statute
+  :source/title "感染症の予防及び感染症の患者に対する医療に関する法律"
+  :source/publisher "e-Gov 法令検索 (Digital Agency)"
+  :source/url "https://laws.e-gov.go.jp/law/410AC0000000114"
+  :source/verify :e-gov-law-id
+  :egov/law-id "410AC0000000114"
+  :egov/law-title "感染症の予防及び感染症の患者に対する医療に関する法律"
+  :egov/law-num "平成十年法律第百十四号"
+  :source/retrieved-at "2026-09-01"
+  :source/covers #{:surveillance-authority :vector-control}
+  :source/note "感染症法 — the statute Japan's mosquito-borne-disease
+                measures run under: the 蚊媒介感染症に関する特定感染症予防
+                指針 this actor's escalation discipline mirrors is issued
+                under it. Identity only — the notifiable-disease lists, the
+                4-class scheme and the prefecture duties are NOT asserted
+                here because no article text was read."}
+
+ {:source/id "law.medical-care"
+  :source/kind :statute
+  :source/title "医療法"
+  :source/publisher "e-Gov 法令検索 (Digital Agency)"
+  :source/url "https://laws.e-gov.go.jp/law/323AC0000000205"
+  :source/verify :e-gov-law-id
+  :egov/law-id "323AC0000000205"
+  :egov/law-title "医療法"
+  :egov/law-num "昭和二十三年法律第二百五号"
+  :source/retrieved-at "2026-09-01"
+  :source/covers #{:hospital-services}
+  :source/note "The statute under which Japan's hospitals and clinics are
+                regulated — the institutional half of COFOG 07.4 that this
+                environmental-surveillance actor deliberately does NOT
+                exercise. Identity only; no article text read. This actor's
+                diagnosis-authority block is what keeps it that way."}
+
+ {:source/id "law.quarantine"
+  :source/kind :statute
+  :source/title "検疫法"
+  :source/publisher "e-Gov 法令検索 (Digital Agency)"
+  :source/url "https://laws.e-gov.go.jp/law/326AC0000000201"
+  :source/verify :e-gov-law-id
+  :egov/law-id "326AC0000000201"
+  :egov/law-title "検疫法"
+  :egov/law-num "昭和二十六年法律第二百一号"
+  :source/retrieved-at "2026-09-01"
+  :source/covers #{:border-vector-control}
+  :source/note "The statute behind the 空港・海港 vector surveillance that
+                the 予防指針 assigns to the national government at points of
+                entry — the border half of the vector-control problem this
+                actor only surveys at community level. Identity only."}
+
+ {:source/id "law.waste-management"
+  :source/kind :statute
+  :source/title "廃棄物の処理及び清掃に関する法律"
+  :source/publisher "e-Gov 法令検索 (Digital Agency)"
+  :source/url "https://laws.e-gov.go.jp/law/345AC0000000137"
+  :source/verify :e-gov-law-id
+  :egov/law-id "345AC0000000137"
+  :egov/law-title "廃棄物の処理及び清掃に関する法律"
+  :egov/law-num "昭和四十五年法律第百三十七号"
+  :source/retrieved-at "2026-09-01"
+  :source/covers #{:breeding-site-abatement}
+  :source/note "Standing-water and waste conditions are what the actor's
+                :log-environmental-reading op surveys as breeding-site
+                evidence; the legal power to ABATE them (removal orders,
+                collection duties) sits in this statute and belongs to
+                municipalities, never to this propose-only actor. Identity
+                only."}
+
+ {:source/id "law.physicians"
+  :source/kind :statute
+  :source/title "医師法"
+  :source/publisher "e-Gov 法令検索 (Digital Agency)"
+  :source/url "https://laws.e-gov.go.jp/law/323AC0000000201"
+  :source/verify :e-gov-law-id
+  :egov/law-id "323AC0000000201"
+  :egov/law-title "医師法"
+  :egov/law-num "昭和二十三年法律第二百一号"
+  :source/retrieved-at "2026-09-01"
+  :source/covers #{:medical-practitioner-authority}
+  :source/note "Where the diagnostic and medical-intervention authority the
+                blueprint permanently blocks lives: only a licensed 医師 may
+                exercise it. Cited so the repository's diagnosis-authority
+                block has a named legal counterpart, not to claim any of
+                that authority. Identity only."}
+
+ ;; ── Agency and institution pages ───────────────────────────────────────────
+
+ {:source/id "mhlw.kakukaisen"
+  :source/kind :agency-page
+  :source/title "蚊媒介感染症｜厚生労働省"
+  :source/publisher "厚生労働省"
+  :source/url "https://www.mhlw.go.jp/stf/seisakunitsuite/bunya/0000164483.html"
+  :source/verify :page-identity
+  :page/title "蚊媒介感染症｜厚生労働省"
+  :source/retrieved-at "2026-09-01"
+  :source/covers #{:vector-control}
+  :source/note "The ministry's 蚊媒介感染症 portal — the disease-by-disease
+                index (デング熱, ジカウイルス感染症, 日本脳炎, マラリア…) the
+                actor's vector-species vocabulary shadows. Identity checked;
+                the deeper per-disease pages were not read."}
+
+ {:source/id "mhlw.vector-guideline"
+  :source/kind :agency-page
+  :source/title "蚊媒介感染症に関する特定感染症予防指針"
+  :source/publisher "厚生労働省"
+  :source/url "https://www.mhlw.go.jp/web/t_doc?dataId=00009620"
+  :source/verify :page-text
+  :page/title "・蚊媒介感染症に関する特定感染症予防指針(◆平成27年04月28日厚生労働省告示第260号)"
+  :page/must-contain ["蚊媒介感染症に関する特定感染症予防指針"
+                      "平常時の予防対策"
+                      "感染症の予防及び感染症の患者に対する医療に関する法律"
+                      "ヒトスジシマカ"]
+  :source/retrieved-at "2026-09-01"
+  :source/covers #{:vector-control :vector-control-guideline}
+  :source/note "The 蚊媒介感染症に関する特定感染症予防指針 (平成27年厚生労働省
+                告示第260号) as served by the ministry's document gateway.
+                The pinned strings include the statute the 指針 is issued
+                under and ヒトスジシマカ, the primary domestic vector — the
+                two anchors that make this page about THIS actor's problem.
+                Note the served <title> opens with a stray ・ and carries a
+                ◆ marker: quoted exactly, mojibake and all, because that is
+                what the host answers."}
+
+ {:source/id "jihs.idwr"
+  :source/kind :agency-page
+  :source/title "感染症発生動向調査週報"
+  :source/publisher "国立健康危機管理研究機構 感染症情報提供サイト"
+  :source/url "https://id-info.jihs.go.jp/surveillance/idwr/index.html"
+  :source/verify :page-identity
+  :page/title "感染症発生動向調査週報｜国立健康危機管理研究機構 感染症情報提供サイト"
+  :source/retrieved-at "2026-09-01"
+  :source/covers #{:surveillance-data}
+  :source/note "The national notifiable-disease surveillance weekly (IDWR) —
+                the data plane an outbreak-signal escalation would be checked
+                against by a human public-health official. Cited at the URL
+                the host actually serves: the historical
+                www.niid.go.jp/niid/ja/idwr.html address 301-redirects here,
+                and this register never cites a redirect. Identity only; no
+                weekly-report data was read."}
+
+ ;; ── What the register does and does not claim to cover ─────────────────────
+
+ {:source/id "register.coverage"
+  :source/kind :coverage
+  :coverage/entries 8
+  :coverage/by-verify {:e-gov-law-id 5 :page-identity 2 :page-text 1}
+  :coverage/verified-at "2026-09-01"
+  :coverage/covered #{:surveillance-authority :vector-control
+                      :vector-control-guideline :surveillance-data
+                      :hospital-services :border-vector-control
+                      :breeding-site-abatement :medical-practitioner-authority}
+  :coverage/not-covered
+  #{[:ordinances "保健所設置市・都道府県の条例（例: みだりに野生動物の放置を
+     禁じる条例、捕獲等の届出）は一件も読んでいない。この actor が自治体の
+     保健所宛に escalate する先の根拠はここにはない。"]
+    [:guideline-texts "蚊媒介感染症の診療ガイドライン・媒介蚊対策マニュアル
+     （国立健康危機管理研究機構版）は名前だけ確認し、本文は読んでいない。
+     診療はこの actor の恒久禁止領域であり、参照する正当性もない。"]
+    [:who-intl "WHO の vector-control guidance（IRIS 登録文書等）は未取得。
+     COFOG 07.4 の国際比較面にはこの表では足りない。"]
+    [:law-text "5 法とも e-Gov API で id・題名・法令番号を照合しただけで、
+     条文本文は読んでいない。条文級の主張はこの表からは導出できない。"]
+    [:idwr-data "IDWR の週報データそのもの（週報 PDF・報告数値）は未取得。
+     :surveillance-data は「出典がどこか」だけを確立する。"]}}
+ ]
