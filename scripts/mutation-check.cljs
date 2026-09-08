@@ -28,7 +28,7 @@
 
 (ns mutation-check
   (:require [clojure.edn :as edn]
-            [clojure.string :as str]
+            [kotoba.lang.text :as str]
             [promesa.core :as p]
             ["fs" :as fs]
             ["os" :as os]

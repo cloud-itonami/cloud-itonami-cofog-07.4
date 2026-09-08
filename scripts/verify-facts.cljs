@@ -113,7 +113,7 @@
 
 (ns verify-facts
   (:require [clojure.edn :as edn]
-            [clojure.string :as str]
+            [kotoba.lang.text :as str]
             [promesa.core :as p]
             ["fs" :as fs]
             ["process" :as process]))
@@ -243,7 +243,7 @@
   Windows-31J, Shift_JIS and CP932 differ in the corners of the standard but
   name the same encoding for this purpose; the register declares the family."
   [c]
-  (let [c (str/lower-case (or c ""))]
+  (let [c (str/lower (or c ""))]
     (cond
       (contains? #{"windows-31j" "shift_jis" "shift-jis" "sjis" "x-sjis" "cp932" "ms932"} c) "shift_jis"
       (contains? #{"euc-jp" "eucjp" "x-euc-jp"} c) "euc-jp"
@@ -300,7 +300,7 @@
                (let [ct (or (.get (.-headers res) "content-type") "")]
                  (cond
                    (not (.-ok res)) {:error (str "HTTP " (.-status res))}
-                   (not (str/includes? (str/lower-case ct) "json"))
+                   (not (str/includes? (str/lower ct) "json"))
                    {:error (str "HTTP " (.-status res) " but content-type " (pr-str ct)
                                 " -- the host answered a page, not the API")}
                    :else (.then (.json res)
@@ -756,7 +756,7 @@
             cov0 (coverage-findings entities sourced hosts)
             fatal (filterv #(= :refused (:level %)) static)]
         (doseq [f static]
-          (println (str "  " (str/upper-case (name (:level f)))
+          (println (str "  " (str/upper (name (:level f)))
                         "[" (name (:reason f)) "]\t" (:id f) "\t" (:why f))))
         (doseq [f cov0] (println (str "  FAIL\tregister.coverage\t" f)))
         (println (str "STATIC\t" (+ (count static) (count cov0))
@@ -813,12 +813,12 @@
                                 " sourced entries in " facts-path))
                   (println (str "HOSTS\t" (count host-results) "\tmissing-path behaviours re-measured"))
                   (doseq [r host-results]
-                    (println (str "  " (str/upper-case (name (:verdict r)))
+                    (println (str "  " (str/upper (name (:verdict r)))
                                   (when (:reason r) (str "[" (name (:reason r)) "]"))
                                   "\thost:" (:host/name (:entity r))
                                   "\t" (or (:detail r) (:why r)))))
                   (doseq [r results]
-                    (println (str "  " (str/upper-case (name (:verdict r)))
+                    (println (str "  " (str/upper (name (:verdict r)))
                                   (when (:reason r) (str "[" (name (:reason r)) "]"))
                                   "\t" (:source/id (:entity r))
                                   "\t" (or (:detail r) (:why r)))))
