@@ -1,5 +1,5 @@
 (ns vectorsurvey.sim
-  "Demo driver -- `clojure -M:dev:run`. Walks a clean surveillance
+  "Demo driver -- `kbb -M:dev:run`. Walks a clean surveillance
   operator through intake -> a GROUNDED vector-survey finding an
   elevated-risk signal (escalate/approve) -> service-visit scheduling
   (escalate/approve) -> outbreak-signal escalation (escalate/approve),

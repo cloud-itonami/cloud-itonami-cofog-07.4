@@ -165,20 +165,20 @@ this is a standalone coordinator blueprint.
 
 ## Verification
 
-- `cloud-itonami-cofog-07.4`: `clojure -M:test` green -- 76 tests, 209
+- `cloud-itonami-cofog-07.4`: `kbb -M:test` green -- 76 tests, 209
   assertions, 0 failures, 0 errors (verified from a fresh checkout),
   including two dedicated tests
   (`diagnosis-authority-is-held-and-permanently-blocked`,
   `diagnosis-authority-is-blocked-via-health-determination-alone`)
   proving the domain-defining boundary holds even when the offending
   field is smuggled into an otherwise-routine or otherwise-always-
-  escalating op. Demo narrative (`clojure -M:dev:run`) exercises
+  escalating op. Demo narrative (`kbb -M:dev:run`) exercises
   proposal submission, escalation, and every HARD-hold scenario
   directly (not-propose-effect, unknown-op, diagnosis-authority-
   blocked, survey-verdict-ungrounded, site-not-verified, trap-unit-
   not-verified, treatment-actuate-blocked, already-scheduled, invalid-
   vector-species, invalid-vector-count).
-- `clojure -M:lint` (clj-kondo): 0 errors, 0 warnings.
+- `kbb -M:lint` (clj-kondo): 0 errors, 0 warnings.
 - All source is `.cljc` (portable ClojureScript / JVM / nbb) -- no
   JVM-only interop; the actor graph is invoked exclusively via
   `langgraph.graph/run*` (not `.invoke`, which is not cljs-portable).
@@ -186,5 +186,5 @@ this is a standalone coordinator blueprint.
   request (commit or hold) leaves exactly one ledger fact.
 - `deps.edn` pins `io.github.kotoba-lang/langgraph` and
   `io.github.kotoba-lang/langchain` via `:local/root` directly in the
-  top-level `:deps`, so a bare `clojure -M:test` resolves offline
+  top-level `:deps`, so a bare `kbb -M:test` resolves offline
   inside the monorepo checkout.
