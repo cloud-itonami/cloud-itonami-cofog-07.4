@@ -1,0 +1,34 @@
+;; What this vertical's robot physically does, declared for
+;; kotoba.robotics.process (kotoba-lang/robotics). `kbb -M:dev:physics` runs it.
+;;
+;; README "Robotics premise": a sensing robot services vector traps, images
+;; standing water / breeding sites and takes air/water-quality samples in
+;; the field (COFOG 07.4 public health services). Its physical work is
+;; walking the trap route carrying a sample cooler, and keeping the water
+;; samples in that cooler cold until they reach the laboratory.
+;;
+;; Every number without a cited source is marked `estimate` in its :basis.
+;; Replacing an estimate with a sourced value is this bot's growth work.
+{:physics/schema "itonami.physical-ai.spec.v1"
+ :repo "cloud-itonami/cloud-itonami-cofog-07.4"
+ :cases
+ [{:id :trap-route-leg
+   :kind :transport
+   :procedure "field robot drives a 150 m leg between mosquito traps on a gravel path, carrying the sample cooler and collected trap bags"
+   :params {:mass-kg 40.0 :distance-m 150.0 :v-max-mps 1.0 :a-max-mps2 0.5
+            :brake-decel-mps2 0.8 :drive-force-n 80.0 :crr 0.04
+            :cog-height-m 0.45 :support-half-length-m 0.28}
+   :sweep {:param :payload-kg :values [5.0 20.0 40.0 60.0 90.0 120.0]}
+   :quantity :cycle-time-s
+   :limit {:max 165.0 :basis "estimate: each trap-to-trap leg in under ~3 minutes so a 20-trap route is serviced within one morning shift"}
+   :boundary {:lo 1.0 :hi 400.0}}
+  {:id :water-sample-cooler
+   :kind :thermal
+   :procedure "four-hour field round in 35 C heat: the expanded-polystyrene wall of the water-sample cooler (ice packs inside at 4 C) is warmed from outside"
+   :params {:conductivity-w-mk 0.035 :density-kg-m3 25.0 :specific-heat-j-kgk 1300.0
+            :t0-c 4.0 :t-hot-c 35.0 :h-front-w-m2k 10.0 :t-back-ambient-c 4.0 :h-back-w-m2k 5.0
+            :threshold-c 8.0 :duration-s 14400.0 :nodes 21}
+   :sweep {:param :thickness-m :values [0.005 0.010 0.020 0.030 0.050]}
+   :quantity :final-back-c
+   :limit {:max 8.0 :basis "estimate: inner cooler wall kept at or below 8 C so the samples stay in the cooled range for microbiological analysis"}
+   :boundary {:lo 0.002 :hi 0.08}}]}
